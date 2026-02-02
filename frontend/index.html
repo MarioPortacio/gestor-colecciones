@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <title>Mi Colección Personal</title>
+    
+    <link href="style.css" rel="stylesheet">
+    <style>  
+
+        /* Forzamos visualmente el texto a mayúsculas, pero NO el placeholder */
+        .uppercase-input {
+            text-transform: uppercase;
+        }
+
+        /* El placeholder específicamente lo dejamos normal */
+        .uppercase-input::placeholder {
+            text-transform: none; /* Esto anula el mayús solo para el placeholder */
+        }
+
+        #star-rating-container {
+            display: inline-flex !important;
+            width: 125px; /* 5 estrellas x 25px cada una */
+            white-space: nowrap;
+            cursor: pointer;
+            position: relative;
+            line-height: 1;
+        }
+
+        #star-rating-container i {
+            width: 25px; /* tamaño estrella */
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+            
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold mb-8 text-gray-800 text-center flex items-center justify-center gap-3">
+            <i class="fa-solid fa-layer-group text-blue-600"></i>
+            Mi Gestor de Colecciones
+        </h1>        
+        <div class="bg-white p-6 rounded-xl shadow-md mb-8 grid grid-cols-2 gap-4 border border-gray-200">
+            <div class="col-span-2 md:col-span-1">
+                <label class="block text-sm font-bold text-gray-700 mb-1">Título</label>
+                <input id="title" type="text" placeholder="Nombre del ítem a ingresar..." 
+                       class="border p-2 rounded w-full shadow-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+            </div>
+
+            <div class="col-span-2 md:col-span-1">
+                <label class="block text-sm font-bold text-gray-700 mb-1">Categoría</label>
+                <input id="category" type="text" placeholder="Escribe o selecciona abajo si ya existe..." 
+                       class="uppercase-input border p-2 rounded w-full uppercase shadow-sm outline-none focus:ring-2 focus:ring-blue-500" 
+                       oninput="this.value = this.value.toUpperCase()">
+                <div id="category-suggestions" class="flex flex-wrap gap-2 mt-2 min-h-5">
+                    </div>
+            </div>
+            
+            <div class="col-span-1">
+                <label class="block text-sm font-bold text-gray-700 mb-1">Estado</label>
+                <select id="status"  onchange="updateStatusStyle(this)"
+                        class="border p-4 rounded w-full bg-white shadow-sm outline-none cursor-pointer">
+                    <option value="">Seleccione Estado</option>
+                    <option value="Pendiente"> Pendiente</option>
+                    <option value="En Progreso"> En Progreso</option>
+                    <option value="Completado"> Completado</option>
+                </select>
+            </div>
+
+        
+
+            <div class="mb-4">
+                <label class="block text-sm font-bold text-gray-700 mb-1">
+                    <i class="fa-solid fa-star text-yellow-500 mr-1"></i> Puntuación (0 a 5)
+                </label>
+                
+                <div class="flex items-center gap-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
+                    <div id="star-rating-container" class="relative flex cursor-pointer text-2xl" 
+                        onmousemove="handleStarHover(event)" 
+                        onmouseleave="resetStarHover()" 
+                        onclick="setStarValue(event)"
+                        title="Haz clic para establecer la puntuación">
+                        
+                        <div class="flex text-gray-300">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        
+                        <div id="star-fill" class="flex text-yellow-400 absolute top-0 left-0 overflow-hidden pointer-events-none" style="width: 0%;">
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                    </div>
+
+                    <input id="rating" type="number" min="0" max="5" step="0.1" value="0"
+                        onkeypress="return event.charCode >= 48 && event.charCode <= 57"
+                        oninput="updateStarsFromInput(this.value)"
+                        class="w-16 p-1 text-center font-bold border rounded-lg focus:ring-2 focus:ring-yellow-400 outline-none">
+                </div>
+            </div>
+
+
+
+
+
+
+            
+            <div class="col-span-2">
+                <label class="block text-sm font-bold text-gray-700 mb-1">Descripción</label>
+                <textarea id="description" placeholder="Añade una descripción..." 
+                          class="border p-2 rounded w-full shadow-sm outline-none h-20 resize-none"></textarea>
+            </div>
+
+            <button onclick="addItem()" 
+                    class="bg-blue-600 text-white px-4 py-3 rounded-lg font-bold hover:bg-blue-700 col-span-2 transition-all shadow-lg active:scale-95">
+                    <i class="fa-solid fa-plus"></i>
+                   Añadir a mi Colección
+            </button>
+        </div>
+
+        
+
+        <!-- contenedor de barra de filtros A -->
+
+        <div class="bg-gray-50 p-4 rounded-xl mb-6 border border-gray-200 shadow-sm flex flex-wrap gap-4 items-end">
+    
+            <div class="flex-1 min-w-37.5">
+                <label class="block text-[13px] font-black text-gray-400 uppercase mb-1">Buscar por título</label>
+                <input type="text" id="searchInput" oninput="renderItems()" 
+                    placeholder="Escribe para buscar..." 
+                    class="w-full border p-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-400">
+            </div>
+
+
+
+            
+            <div class="w-44">
+                <label class="block text-[13px] font-black text-gray-400 uppercase mb-1">Buscar por Categoría</label>
+                <select id="filterCategory" onchange="renderItems()" class="w-full border p-2 rounded-lg text-sm outline-none bg-white shadow-sm cursor-pointer">
+                    <option value="TODAS">Todas las categorías</option>
+                    </select>
+            </div>
+
+
+
+            <div class="w-40">
+                <label class="block text-[13px] font-black text-gray-400 uppercase mb-1">Buscar por Estado</label>
+                <select id="filterStatus" onchange="renderItems()" class="w-full border p-2 rounded-lg text-sm outline-none bg-white shadow-sm">
+                    <option value="TODOS">Todos los estados</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="En Progreso">En Progreso</option>
+                    <option value="Completado">Completado</option>
+                </select>
+            </div>
+
+
+            
+
+            <div class="flex flex-col">
+                <label class="block text-[13px] font-black text-gray-400 uppercase mb-1">Buscar por Rango de Estrellas</label>
+                <div class="flex items-center gap-2">
+                    <select id="filterStarsMin" onchange="renderItems()" class="border p-2 rounded-lg text-sm outline-none bg-white shadow-sm w-30">
+                        <option value="0">Min: 0 ⭐</option>
+                        <option value="1">1 ⭐</option>
+                        <option value="2">2 ⭐</option>
+                        <option value="3">3 ⭐</option>
+                        <option value="4">4 ⭐</option>
+                        <option value="5">5 ⭐</option>
+                    </select>
+                    
+                    <span class="text-gray-400 text-xs">hasta</span>
+
+                    <select id="filterStarsMax" onchange="renderItems()" class="border p-2 rounded-lg text-sm outline-none bg-white shadow-sm w-30">
+                        <option value="5">Max: 5 ⭐</option>
+                        <option value="4">4 ⭐</option>
+                        <option value="3">3 ⭐</option>
+                        <option value="2">2 ⭐</option>
+                        <option value="1">1 ⭐</option>
+                        <option value="0">0 ⭐</option>
+                    </select>
+                </div>
+            </div>
+            
+        </div>
+
+         <!-- contenedor de barra de filtros Z -->
+
+        <div class="flex justify-between items-center mb-4">
+            <button onclick="clearFilters()" 
+                    class="bg-white-50 text-gray-600 border border-black-200 p-2 rounded-lg text-sm hover:bg-blue-100 transition h-9.5 flex items-center gap-2 px-3 shadow-sm"
+                    title="Restablecer todos los filtros">
+                <i class="fa-solid fa-filter-circle-xmark"></i>
+                <span class="font-bold">Limpiar Filtros</span>
+            </button>
+        
+            <button onclick="toggleOrder()" id="orderBtn" 
+                                            class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-gray-50 transition shadow-sm flex items-center gap-2"
+                                            title="Cambiar orden de los ítems">
+                <span>Orden:</span>
+                <span id="orderStatusText">Más nuevos primero</span>
+                <i id="orderIcon" class="fa-solid fa-sort-down"></i>
+            </button>
+        </div>
+
+        <div id="items-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            </div>
+
+
+            <!--  -->
+    </div>  
+            <!--  -->
+
+
+    <div class="fixed bottom-5 right-5 lg:top-10 lg:right-10 lg:bottom-auto w-64">
+        <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4 shadow-lg transform rotate-2 hover:rotate-0 transition-transform duration-300">
+            <div class="flex items-center mb-2">
+                <i class="fas fa-sticky-note text-yellow-600 mr-2"></i>
+                <span class="font-bold text-yellow-800 uppercase text-xs tracking-wider">Nota Importante</span>
+            </div>
+            <p class="text-sm text-yellow-700 italic">
+                "Esta aplicación es una demo, por lo tanto los datos no persisten en está página. Las categorías se cargan dinámicamente según los ítems guardados."
+            </p>
+        </div>
+    </div>
+    <script>
+
+        const API_URL = "http://127.0.0.1:8000/items"; // revisar barra items/, evitar problemas de ruta
+
+        let currentItems = []; // Variable global para guardar los datos
+        let ascending = false; // Por defecto: Descendente (más nuevos primero) 
+
+        // --- FUNCIONES AUXILIARES ---
+        function getNextStatus(status) {
+            const cycle = { 'Pendiente': 'En Progreso', 'En Progreso': 'Completado', 'Completado': 'Pendiente' };
+            return cycle[status] || 'Pendiente';
+        }
+
+        function getStarsHtml(rating) {
+            let html = '<div class="flex gap-1">';
+                
+            const r = Math.max(0, Math.min(5, rating));
+
+            for (let i = 1; i <= 5; i++) {
+                // Calculamos el porcentaje de llenado para esta estrella específica
+                let fillPercentage = 0;
+                if (r >= i) {
+                    fillPercentage = 100;
+                } else if (r > i - 1) {
+                    fillPercentage = (r - (i - 1)) * 100;
+                }
+
+                // Generamos un ID único para el degradado de cada estrella
+                const gradientId = `grad-${Math.random().toString(36).substr(2, 9)}`;
+
+                html += `
+                    <svg width="16" height="16" viewBox="0 0 24 24" class="drop-shadow-sm">
+                        <defs>
+                            <linearGradient id="${gradientId}">
+                                <stop offset="${fillPercentage}%" stop-color="#fbbf24" />
+                                <stop offset="${fillPercentage}%" stop-color="#d1d5db" />
+                            </linearGradient>
+                        </defs>
+                        <path fill="url(#${gradientId})" 
+                            d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279-7.416-3.967-7.417 3.967 1.481-8.279-6.064-5.828 8.332-1.151z"/>
+                    </svg>`;
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        // --- CARGAR ITEMS ---
+        async function loadItems() {
+            try {
+                const response = await fetch(API_URL);
+                currentItems = await response.json(); // Guardamos los datos en la variable global
+                renderItems(); // Llamamos a una función que se encarga de pintar
+            } catch (error) {
+                console.error("Error cargando items:", error);
+            }
+        }
+
+
+        function toggleOrder() {
+            ascending = !ascending;
+            const icon = document.getElementById('orderIcon');
+            const statusText = document.getElementById('orderStatusText');
+            
+            if (ascending) {
+                // Icono para orden ascendente
+                icon.className = "fa-solid fa-sort-up";
+                statusText.innerText = "Más antiguos primero";
+            } else {
+                // Icono para orden descendente
+                icon.className = "fa-solid fa-sort-down";
+                statusText.innerText = "Más nuevos primero";
+            }
+            
+            renderItems();
+        }
+
+
+        // Variable global para filtrar por categoría al hacer clic
+        let selectedCategory = "TODAS";
+
+        function updateCategoryFromSelect(val) {
+            selectedCategory = val;
+
+                renderItems();
+        }
+
+       function renderItems() {
+        // Validación lógica de rango de estrellas
+        const minSelect = document.getElementById('filterStarsMin');
+        const maxSelect = document.getElementById('filterStarsMax');
+
+        if (parseFloat(minSelect.value) > parseFloat(maxSelect.value)) {
+            // Si el mínimo es mayor al máximo, se iguala el máximo al mínimo
+            maxSelect.value = minSelect.value;
+        }
+
+
+
+        const container = document.getElementById('items-container');
+        if (!container) return;
+
+
+
+       // Obtener valores de los filtros
+        const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || "";
+        const filterStatus = document.getElementById('filterStatus')?.value || "TODOS";
+        const filterCategory = document.getElementById('filterCategory')?.value || "TODAS";
+        const minStars = parseFloat(document.getElementById('filterStarsMin')?.value) || 0;
+        const maxStars = parseFloat(document.getElementById('filterStarsMax')?.value) || 5;
+
+        // Limpiamos el contenedor antes de pintar
+        container.innerHTML = '';
+
+
+        //Aplicar todos los filtros en cascada
+        let filteredItems = currentItems.filter(item => {
+        // Filtro de Texto
+        const matchesSearch = item.title.toLowerCase().includes(searchTerm);
+        
+        // Filtro de Estado
+        const matchesStatus = filterStatus === "TODOS" || item.status === filterStatus;
+        
+        // Filtro de Estrellas
+        // Lógica de estrellas: ¿Está entre el mínimo y el máximo?
+        const itemRating = parseFloat(item.rating) || 0;
+        const matchesStars = itemRating >= minStars && itemRating <= maxStars;
+
+        // Filtro por la categoría del Dropdown
+        const itemCat = (item.category || "").toUpperCase().trim();
+        const matchesCategory = filterCategory === "TODAS" || itemCat === filterCategory;
+
+        return matchesSearch && matchesStatus && matchesStars && matchesCategory;
+        });
+
+
+        // 3. ORDENADO: Aplicamos el orden (ascendente o descendente) sobre los filtrados
+        const sortedItems = [...filteredItems].sort((a, b) => {
+            return ascending ? a.id - b.id : b.id - a.id;
+        });
+
+        // 4. VALIDACIÓN: Si no hay resultados tras filtrar
+        if (sortedItems.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-full text-center py-10">
+                    <p class="text-gray-400 font-medium">No se encontraron items que coincidan.</p>
+                </div>`;
+            return;
+        }
+
+        // RENDERIZADO: Bucle de construcción de tarjetas
+        sortedItems.forEach(item => {
+            const status = item.status || 'Seleccione Estado';
+            const rating = parseFloat(item.rating) || 0;
+            
+            const statusStyles = {
+                'Completado': { border: 'border-green-500', bg: 'bg-green-100 text-green-700', btn: 'text-green-600 border-green-200 hover:bg-green-50' },
+                'En Progreso': { border: 'border-blue-500', bg: 'bg-blue-100 text-blue-700', btn: 'text-blue-600 border-blue-200 hover:bg-blue-50' },
+                'Pendiente': { border: 'border-amber-500', bg: 'bg-amber-100 text-amber-700', btn: 'text-amber-600 border-amber-200 hover:bg-amber-50' },
+                'Seleccione Estado': { border: 'border-gray-500', bg: 'bg-gray-50 text-gray-700', btn: 'text-gray-600 border-gray-200 hover:bg-gray-50' }
+            };
+
+            const style = statusStyles[status] || { border: 'border-gray-500', bg: 'bg-gray-50', btn: '' };
+                    container.innerHTML += `
+                        <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 ${style.border} transition-all hover:shadow-md animate-fade-in">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h3 class="font-bold text-lg text-gray-800 capitalize leading-tight">${item.title}</h3>
+                                    <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mt-1">${item.category || 'GENERAL'}</p>
+                                </div>
+                                <span class="text-[10px] font-black px-2.5 py-1 rounded-lg ${style.bg}">${status}</span>
+                            </div>
+                            
+                            <p class="text-gray-500 my-4 text-sm italic min-h-[40px]">
+                                ${item.description ? `"${item.description}"` : 'Sin descripción'}
+                            </p>
+
+                            <div class="mt-4 flex flex-col gap-4 border-t border-gray-50 pt-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase">Puntaje:</span>
+                                    <div class="flex items-center bg-gray-50 px-2 py-1 rounded-md border border-gray-100">
+                                        <span class="text-sm">${getStarsHtml(rating)}</span>
+                                        <span class="ml-2 text-xs font-black text-gray-600">(${rating.toFixed(1)})</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-between items-center">
+                                    <button onclick="toggleStatus(${item.id}, '${status}')" 
+                                            class="flex-1 mr-4 bg-white border ${style.btn} px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all active:scale-95">
+                                        Mover a: ${getNextStatus(status)}
+                                    </button>
+                                    
+                                    <button onclick="deleteItem(${item.id})" class="text-gray-300 hover:text-red-500 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+            
+         }//renderItems
+
+
+        
+
+
+
+
+        // --- AÑADIR ITEM ---
+        async function addItem() {
+            const titleInput = document.getElementById('title');
+            const statusSelect = document.getElementById('status');
+
+            let ratingVal = parseFloat(document.getElementById('rating').value) || 0;
+
+            // Normalización de seguridad
+            if (ratingVal > 5) ratingVal = 5;
+            if (ratingVal < 0) ratingVal = 0;
+
+            if (!titleInput.value.trim()) {
+                titleInput.classList.add("border-red-500");
+                alert("El título es obligatorio.");
+                return;
+            }
+            titleInput.classList.remove("border-red-500");
+
+            // VALIDACIÓN: Si el estado es vacío
+            if (!statusSelect.value) {
+                alert("Por favor, selecciona un estado válido (Pendiente, En Progreso o Completado).");
+                statusSelect.focus(); // Pone el foco en el select para que el usuario lo vea
+                statusSelect.classList.add('border-red-500'); //  poner el borde rojo
+                return; // DETIENE la función aquí
+            }
+            
+
+            
+
+            const data = {
+                title: titleInput.value.trim(),
+                category: document.getElementById('category').value.toUpperCase().trim() || "GENERAL",
+                description: document.getElementById('description').value.trim(),
+                status: document.getElementById('status').value,
+                rating: ratingVal
+            };
+
+            
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+
+                    //LIMPIAR ESTRELLAS 
+                    lockedRating = 0; // Reinicia la variable global
+                    const ratingInput = document.getElementById('rating');
+                    if (ratingInput) ratingInput.value = 0; // Reinicia el input numérico
+                    
+                    updateStarFill(0); // Esta función pone el ancho de las estrellas doradas en 0%
+
+                    // Limpiar campos
+                    titleInput.value = '';
+                    document.getElementById('description').value = '';
+                    document.getElementById('category').value = '';
+                    document.getElementById('rating').value = '0';
+                    document.getElementById('status').value = "";
+
+                    // Recargar
+                    await loadItems();
+                    await loadCategories();
+
+                    // RE-SINCRO DE CATEGORÍAS (Esto actualiza el Dropdown y los botones)
+                    await updateCategoryDropdown();
+                    if (typeof loadCategories === 'function') await loadCategories();
+                    
+                    // Volvemos a pintar la lista con el nuevo item
+                    renderItems();
+
+                    titleInput.focus(); // El cursor vuelve al inicio automáticamente
+
+                    
+
+                    updateStatusStyle(document.getElementById('status')); // Resetea el estilo del estado
+                    statusSelect.classList.remove("border-red-500");
+                    statusSelect.classList.add('border-gray-400', 'text-gray-700');
+                }
+            } catch (error) {
+                console.error("Error al guardar:", error);
+            }
+        }
+
+        // --- CATEGORÍAS ---
+        async function loadCategories() {
+            try {
+                const response = await fetch("http://127.0.0.1:8000/categories");
+                const categories = await response.json();
+                const container = document.getElementById('category-suggestions');
+                if (!container) return;
+                
+                container.innerHTML = '';
+                // Limpieza de duplicados y vacíos
+                const unique = [...new Set(categories.map(c => c ? c.toUpperCase().trim() : ""))].filter(c => c !== "");
+                
+                unique.forEach(cat => {
+                    container.innerHTML += `
+                        <button onclick="selectCategory('${cat}')" 
+                                class="text-[10px] bg-blue-100 text-blue-700 font-bold hover:bg-blue-600 hover:text-white px-2 py-1 rounded transition uppercase">
+                            ${cat}
+                        </button>
+                    `;
+                });
+            } catch (e) {
+                console.error("Error cargando categorías:", e);
+            }
+        }
+
+
+        async function updateCategoryDropdown() {
+            try {
+                const response = await fetch("http://127.0.0.1:8000/categories");
+                const categories = await response.json();
+                const select = document.getElementById('filterCategory');
+                
+                if (!select) return;
+
+                // Resetear manteniendo la opción por defecto
+                select.innerHTML = '<option value="TODAS">Todas las categorías</option>';
+
+                // Obtener categorías únicas, limpias y en mayúsculas
+                const unique = [...new Set(categories.map(c => c ? c.toUpperCase().trim() : ""))].filter(c => c !== "");
+
+                unique.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    select.appendChild(option);
+                });
+            } catch (e) {
+                console.error("Error al actualizar dropdown:", e);
+            }
+        }
+
+
+
+        function selectCategory(cat) {
+            document.getElementById('category').value = cat;
+        }
+
+
+        // Delete item
+        async function deleteItem(id) {
+            const name = currentItems.find(item => item.id === id)?.title || "este ítem";
+            if (!confirm(`¿Estás seguro de que quieres eliminar este ítem?: ${name}`)) return;
+
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    console.log(`Ítem ${id} eliminado`);
+
+                    //  Actualizamos la lista global de ítems
+                    await loadItems();
+
+                    // Sincronizamos los componentes de categorías
+                    // Si ya no existen ítems con esa categoría, estas funciones al consultar al backend ya no la traerán.
+                    await updateCategoryDropdown();
+                    if (typeof loadCategories === 'function') await loadCategories();
+
+                    //  Volvemos a pintar la interfaz
+                    renderItems();
+                } else {
+                    alert("Error al eliminar el ítem");
+                }
+            } catch (error) {
+                console.error("Error en la petición de borrado:", error);
+            }
+        }
+
+
+
+        async function toggleStatus(id, currentStatus) {
+            const next = getNextStatus(currentStatus);
+            await fetch(`${API_URL}/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: next })
+            });
+            loadItems();
+        }
+
+
+        // Validación extra por si escriben el número a mano
+        function validarRating(input) {
+            if (input.value > 5) input.value = 5;
+            if (input.value < 0) input.value = 0;
+        }
+
+
+
+
+        function clearFilters() {
+            // Resetear Inputs de texto
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) searchInput.value = "";
+
+            // Resetear Selects de Estado y Categoría
+            const filterStatus = document.getElementById('filterStatus');
+            if (filterStatus) filterStatus.value = "TODOS";
+
+            const filterCategory = document.getElementById('filterCategory');
+            if (filterCategory) filterCategory.value = "TODAS";
+
+            // Resetear Rango de Estrellas
+            const filterStarsMin = document.getElementById('filterStarsMin');
+            if (filterStarsMin) filterStarsMin.value = "0";
+
+            const filterStarsMax = document.getElementById('filterStarsMax');
+            if (filterStarsMax) filterStarsMax.value = "5";
+
+            // Resetear la variable global de categoría (la de los botones de arriba)
+            selectedCategory = "TODAS";
+
+            // Resetear el orden a descendente (por ID más nuevo)
+            ascending = false;
+            const orderIcon = document.getElementById('orderIcon');
+            const orderStatusText = document.getElementById('orderStatusText');
+            if (orderStatusText){
+                orderStatusText.innerText = "Más nuevos primero";
+            }
+                
+            if (orderIcon){
+                orderIcon.className = "fa-solid fa-sort-down";
+            } 
+
+            
+
+            // Volver a renderizar todo
+            renderItems();
+        }
+
+
+
+
+
+        function updateStatusStyle(selectElement) {
+            const val = selectElement.value;
+            // Quitamos clases viejas
+            selectElement.classList.remove('border-yellow-400', 'border-blue-400', 'border-green-400', 'text-yellow-700', 'text-blue-700', 'text-green-700', 'bg-yellow-50', 'bg-blue-50', 'bg-green-50', 'border-gray-400', 'text-gray-700');
+            
+            if (val === "Pendiente") {
+                selectElement.classList.add('border-yellow-400', 'text-yellow-700', 'bg-yellow-50');
+            } else if (val === "En Progreso") {
+                selectElement.classList.add('border-blue-400', 'text-blue-700', 'bg-blue-50');
+            } else if (val === "Completado") {
+                selectElement.classList.add('border-green-400', 'text-green-700', 'bg-green-50');
+            }
+            
+         }
+
+
+
+        //  --- FUNCIONES DE ESTRELLAS ---
+
+        let lockedRating = 0; // El valor seleccionado rating
+
+        function handleStarHover(e) {
+            const rect = document.getElementById('star-rating-container').getBoundingClientRect();
+            const val = calculateRating(e, rect);
+            updateStarFill(val);
+        }
+
+
+        function calculateRating(e, rect) {
+            let x = e.clientX - rect.left;
+            let val = (x / rect.width) * 5;
+
+            const width = rect.width;
+
+            // Redondeo a 1 decimal
+            val = Math.round(val * 10) / 10;
+
+            // Forzar los límites para que el 0 y el 5 sean fáciles de marcar
+            if (x < 3) val = 0;
+            if (x > width - 3) val = 5;
+
+            
+            // No permite menos de 0 ni más de 5
+            if (val < 0) val = 0;
+            if (val > 5) val = 5;
+
+
+            
+           return Math.max(0, Math.min(5, val));
+        }
+
+
+
+        function resetStarHover() {
+            // Al salir el mouse, vuelve al valor que el usuario hizo clic
+            updateStarFill(lockedRating);
+        }
+
+
+
+        function setStarValue(e) {
+            const rect = document.getElementById('star-rating-container').getBoundingClientRect();
+            const val = calculateRating(e, rect);
+            
+            lockedRating = val;
+            document.getElementById('rating').value = val;
+            updateStarFill(val);
+            
+        }
+       
+           
+        
+
+        // Sincronizar cuando el usuario escribe manualmente en el cuadrito numérico
+        function updateStarsFromInput(val) {
+            let num = parseFloat(val);
+            
+            const input = document.getElementById('rating');
+
+            // Si el usuario borra todo, lo dejamos en 0
+            if (isNaN(num)) num = 0;
+
+            // Si intenta pasarse de 5, lo devolvemos a 5 forzosamente
+            if (num > 5) {
+                num = 5;
+                input.value = 5; 
+            }
+            
+            // Si intenta poner números negativos
+            if (num < 0) {
+                num = 0;
+                input.value = 0;
+            }
+
+            lockedRating = num;
+            updateStarFill(num);
+        }
+
+        function updateStarFill(val) {
+            const fill = document.getElementById('star-fill');
+            if (fill) {
+                let percentage = (val / 5) * 100;
+                fill.style.width = `${percentage}%`;
+            }
+        }
+
+
+
+
+        // --- FIN FUNCIONES DE ESTRELLAS ---
+
+
+
+        // --- INICIALIZACIÓN ---
+        window.addEventListener('DOMContentLoaded', () => {
+            loadItems();
+            loadCategories();
+            updateCategoryDropdown();
+        });
+
+
+
+        window.onload = async () => {
+            console.log("Aplicación iniciada");
+            
+            //  Cargamos los datos de la API a la variable global
+            await loadItems(); 
+            
+            //  Llenamos los botones de categorías de sugerencias
+            if (typeof loadCategories === 'function') await loadCategories();
+            
+            //  Llenamos el Dropdown de la barra de filtros 
+            await updateCategoryDropdown();
+            
+            //  Pintamos todo por primera vez
+            renderItems();
+        };
+    </script>
+</body>
+</html>

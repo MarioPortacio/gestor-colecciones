@@ -1,0 +1,35 @@
+# Secretos y contraseñas
+.env
+
+# Entorno virtual
+venv/
+env/
+ENV/
+
+# Cache de Python
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Bases de datos locales
+*.db
+*.sqlite3
+
+# VS Code
+.vscode/
+
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+
+# Herramientas de Desarrollo (Tailwind)
+tailwindcss.exe
+.tailwindcss/
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
