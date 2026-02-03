@@ -1,4 +1,4 @@
-# 📦 Gestor de Colecciones Personalizadas
+# 📚 Gestor de Colecciones Personalizadas
 
 Una aplicación web moderna para gestionar colecciones (libros, películas, juegos, etc.) construida con **FastAPI**, **PostgreSQL** y **Tailwind CSS**.
 
@@ -44,18 +44,21 @@ Una aplicación web moderna para gestionar colecciones (libros, películas, jueg
    pip install -r requirements.txt
 
 2. **Entorno virtual:**
+    ```bash
     python -m venv venv
     ./venv/Scripts/activate
     pip install -r requirements.txt
 
-3. **Variables de Entorno (.env): Crea un archivo .env con tus credenciales:**
-    DB_USER=postgres
+3. **Variables de Entorno (.env): Crea un archivo .env con tus credenciales y pega:**
+    ```bash
+    DB_USER=postgres(o tu_usuariodb)
     DB_PASSWORD=tu_contraseña
     DB_HOST=localhost
     DB_PORT=5432
     DB_NAME=colecciones_db
 
 4. **Ejecutar la App:**
+    ```bash
     uvicorn main:app --reload
 
 

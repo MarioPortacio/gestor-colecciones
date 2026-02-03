@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from typing import List
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -23,6 +25,13 @@ app.add_middleware(
 )
 
 
+# Montar la carpeta donde está el CSS generado
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+
+@app.get("/")
+async def read_index():
+    # Servir el archivo index.html
+    return FileResponse(os.path.join("frontend", "index.html"))
 
 # CREATE
 @app.post("/items/", response_model=schemas.ItemResponse)
