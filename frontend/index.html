@@ -533,7 +533,7 @@
         // --- CATEGORÍAS ---
         async function loadCategories() {
             try {
-                const response = await fetch("http://127.0.0.1:8000/categories");
+                const response = await fetch("/categories");
                 const categories = await response.json();
                 const container = document.getElementById('category-suggestions');
                 if (!container) return;
@@ -558,7 +558,7 @@
 
         async function updateCategoryDropdown() {
             try {
-                const response = await fetch("http://127.0.0.1:8000/categories");
+                const response = await fetch("/categories");
                 const categories = await response.json();
                 const select = document.getElementById('filterCategory');
                 
