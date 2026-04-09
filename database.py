@@ -19,7 +19,7 @@ port = os.getenv("DB_PORT", "5432")
 db_name = os.getenv("DB_NAME", "colecciones_db")
 
 # Construye la URL usando f-strings
-DATABASE_URL = f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
+DATABASE_URL = f"postgresql://{user}:{password}@{host}:{port}/{db_name}?sslmode=require"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
