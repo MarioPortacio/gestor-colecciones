@@ -19,7 +19,7 @@ if host:
 DATABASE_URL = f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
 
 
-if "?sslmode=" not in DATABASE_URL:
+if "render.com" in DATABASE_URL and "?sslmode=" not in DATABASE_URL:
     DATABASE_URL += "?sslmode=require"
 
 
