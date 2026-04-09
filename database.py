@@ -1,32 +1,33 @@
 import os
-from dotenv import load_dotenv
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from dotenv import load_dotenv
 
-# Carga las variables del archivo .env
 load_dotenv()
 
-# # Formato: postgresql://usuario:password@localhost:port/nombre_db
 
-
-# Obtiene los datos de las variables de entorno
-# El segundo argumento es el valor por defecto si no encuentra la variable
-user = os.getenv("DB_USER", "postgres")
-password = os.getenv("DB_PASSWORD", "")
-host = os.getenv("DB_HOST", "localhost")
+user = os.getenv("DB_USER")
+password = os.getenv("DB_PASSWORD")
+host = os.getenv("DB_HOST")
 port = os.getenv("DB_PORT", "5432")
-db_name = os.getenv("DB_NAME", "colecciones_db")
+db_name = os.getenv("DB_NAME")
 
-# Construye la URL usando f-strings
-DATABASE_URL = f"postgresql://{user}:{password}@{host}:{port}/{db_name}?sslmode=require"
+if host:
+    host = host.strip().replace("postgresql://", "").replace("postgres://", "")
 
-engine = create_engine(DATABASE_URL)
+DATABASE_URL = f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
+
+
+if "?sslmode=" not in DATABASE_URL:
+    DATABASE_URL += "?sslmode=require"
+
+
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
-# Dependencia para obtener la sesión en los endpoints
 def get_db():
     db = SessionLocal()
     try:
