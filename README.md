@@ -2,8 +2,13 @@
 
 Una aplicación web moderna para gestionar colecciones (libros, películas, juegos, etc.) construida con **FastAPI**, **PostgreSQL** y **Tailwind CSS**.
 
-## 🚀 Demo
-> https://gestor-colecciones.onrender.com/
+![Home](https://github.com/MarioPortacio/gestor-colecciones/blob/73bbcd52850d27c156fd80d6b076606c59c902a6/img/p1.jpg)
+
+![Img 2](https://github.com/MarioPortacio/gestor-colecciones/blob/73bbcd52850d27c156fd80d6b076606c59c902a6/img/p2.jpg)
+
+![Img 3](https://github.com/MarioPortacio/gestor-colecciones/blob/73bbcd52850d27c156fd80d6b076606c59c902a6/img/p3.jpg)
+
+
 
 ## ✨ Características
 - **Backend robusto:** FastAPI con validación de datos y ORM (SQLAlchemy).
