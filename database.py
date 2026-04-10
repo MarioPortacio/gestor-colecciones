@@ -10,24 +10,24 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not DATABASE_URL:
-    # Fallback para local
     DATABASE_URL = "postgresql://postgres:password@localhost:5432/colecciones_db"
 else:
-    # 1. Corregir protocolo para SQLAlchemy 2.0
+    # Asegurar que use postgresql:// para SQLAlchemy 2.0
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    
-    # 2. Asegurar SSL
-    if "?sslmode=" not in DATABASE_URL:
-        separator = "&" if "?" in DATABASE_URL else "?"
-        DATABASE_URL += f"{separator}sslmode=require"
 
-# --- LOG DE DEPURACIÓN
+# LOG para confirmar qué estamos usando
 masked_url = re.sub(r':([^@]+)@', ':****@', DATABASE_URL)
-print(f"DEBUG: Intentando conectar a: {masked_url}")
-# ------------------------------------------------------------
+print(f"DEBUG: Conectando a {masked_url}")
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+# Añadimos connect_args para forzar SSL correctamente con psycopg2
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"sslmode": "require"},
+    pool_pre_ping=True,
+    pool_recycle=300
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
