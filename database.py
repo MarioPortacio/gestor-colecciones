@@ -6,24 +6,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Render proporciona la DATABASE_URL. Si no existe, usamos una local para pruebas.
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/colecciones_db")
 
-user = os.getenv("DB_USER")
-password = os.getenv("DB_PASSWORD")
-host = os.getenv("DB_HOST")
-port = os.getenv("DB_PORT", "5432")
-db_name = os.getenv("DB_NAME")
+# SQLAlchemy 2.0 requiere que el protocolo sea 'postgresql://' obligatoriamente
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-if host:
-    host = host.strip().replace("postgresql://", "").replace("postgres://", "")
-
-DATABASE_URL = f"postgresql://{user}:{password}@{host}:{port}/{db_name}"
-
-
-if "render.com" in DATABASE_URL and "?sslmode=" not in DATABASE_URL:
-    DATABASE_URL += "?sslmode=require"
-
-
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
+# Creamos el motor
+engine = create_engine(DATABASE_URL)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
